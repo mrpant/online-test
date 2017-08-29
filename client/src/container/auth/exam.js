@@ -99,6 +99,15 @@ class Exam extends Component{
                answer_2 = false;
                answer_3 = false;
                answer_4 = false;
+
+               if(window.localStorage.getItem('attemptCounter') == null){
+                  window.localStorage.setItem('attemptCounter',1);
+                }else{
+                   var   existingCounter = parseInt(JSON.parse(window.localStorage.getItem('attemptCounter')));
+                    existingCounter = existingCounter +  1;
+                    window.localStorage.setItem('attemptCounter',JSON.stringify(existingCounter)); 
+                }
+           
          } 
 
          
@@ -162,6 +171,7 @@ class Exam extends Component{
                    this.result[3] = false;
                 }
 
+
              
               console.log("answer_1"+this.result[0] );
               console.log("answer_2"+this.result[1] );
@@ -182,22 +192,22 @@ class Exam extends Component{
                  };  
 
                 window.localStorage.setItem('examQuestion',JSON.stringify(Array(answerObject)));
-                window.localStorage.setItem('attemptCounter',1);
+               
               }else{
 
                 var existingObject =   JSON.parse(window.localStorage.getItem('examQuestion')) || [];
-                 var   existingCounter = parseInt(JSON.parse(window.localStorage.getItem('attemptCounter')));
+                
 
                      let answerObject = {
                       _id :  object._id,
                       marks : 1,   
                     };  
 
-                existingCounter += existingCounter;
+             
 
                 existingObject.push(answerObject);
                 window.localStorage.setItem('examQuestion',JSON.stringify(existingObject)); 
-                window.localStorage.setItem('attemptCounter',JSON.stringify(existingCounter)); 
+               
 
               }  
 
