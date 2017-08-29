@@ -242,7 +242,7 @@ class Exam extends Component{
 
       submitFinalTest(event){
 
-          if(window.localStorage.getItem('attemptCounter') == null  || parseInt(window.localStorage.getItem('attemptCounter'))  <= 30 ){
+          if(window.localStorage.getItem('attemptCounter') == null  || parseInt(window.localStorage.getItem('attemptCounter'))  <= 29 ){
             alert("Sorry!!,Now You can't Submit this Test,Please Attampted First all Questions...!!");
             return false;
           }
@@ -286,7 +286,7 @@ class Exam extends Component{
 	        const currentTodos = todos.slice(indexOfFirstTodo, indexOfLastTodo);
 	        const pageNumbers = [];
 
-        if(todos.length <= 30){
+        if(todos.length <= 29){
         	alert("Question are Preparing by Admin!! , Max 30 Questions should be Their , <<As Requirement not Matched>>!! Now not Permitted for this Exam..");
         	 browserHistory.push('/test');
         	return false;
