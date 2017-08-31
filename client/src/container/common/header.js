@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import * as actions from '../../actions';
+import { browserHistory } from 'react-router';
 
 class Header extends Component{
 
@@ -10,6 +11,8 @@ class Header extends Component{
 		constructor(props) { // CONSTRUCOR FOR INIT VARIABLE
 			super(props);
 			this.logout = this.logout.bind(this);
+
+			
 		} 
 
 

@@ -6,6 +6,8 @@ import * as actions from '../../actions';
 
 class Addquestion  extends Component{
 
+				
+
 
 				 handleFormSubmit(formProps) {
 			 			

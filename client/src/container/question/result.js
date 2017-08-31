@@ -3,17 +3,37 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';						
 import * as actions from '../../actions';
+import { browserHistory } from 'react-router';
 
 class Result extends Component{
 			
 
 			constructor(props){
 				super(props);
+
+				if(window.localStorage.getItem('token') == null || window.localStorage.getItem('token') == undefined){
+					browserHistory.push('/');
+					setTimeout(function(){
+						window.location.reload();
+					},500);
+				}
+
 			   this.resultView = JSON.parse(window.localStorage.getItem('examQuestion'));
-			   this.counter = 0;
+			   this.correct = 0;
+			   this.wrong = 0;
+			   this.totalNoQuestion = this.resultView.length;
 			   this.resultView.map(value => {  
-			   		this.counter += value.marks;
+			   		if(value.marks == 1){
+			   			this.correct++;
+			   		}
+			  
+			   		if(value.marks == 0 ){
+			   			this.wrong++;
+			   		}
 			   });
+
+
+
 			}	
 
 			  
@@ -23,16 +43,15 @@ class Result extends Component{
 					 render(){
 
 
-					 	const _resTemp  = <div><br/><center><h1>Thanks For Attemped Online Test....</h1></center>
-					 					 <br/><br/><center><h1>Scoring Marks : {this.counter} / 30</h1></center>
+					 	const _resTemp  = <div><br/><center><h1>Welcome to Online Test....</h1></center>
+					 					 <br/><br/><center><strong>Total Number of Attemped Question : {this.totalNoQuestion}</strong></center>
+					 					 <br/><br/><center><strong className="greenClass">Total Number of Correct Question's Answer : {this.correct}</strong></center>
+					 					 <br/><br/><center><strong className="redClass">Total Number of Wrong Question's Answer : {this.wrong} </strong></center>
+					 				     <br/><br/><center><h1>Your Score: {this.correct} / {this.totalNoQuestion} </h1></center>			
 					 					 <br/><br/><center><a href="/">Back To Home</a></center>
 					 					 </div>;   
 
 									                
-									       
-
-					 		
-
 
 						return (
 							<div className="inner_content_w3_agile_info two_in" >

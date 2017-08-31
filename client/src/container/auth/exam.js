@@ -10,24 +10,43 @@ class Exam extends Component{
 
 
 
-	 constructor(props) { // CONSTRUCOR FOR INIT VARIABLE
+	   constructor(props) { // CONSTRUCOR FOR INIT VARIABLE
         super(props);
         this.handleClick = this.handleClick.bind(this);
         this.props.getExamList();
       	this.result = [];
  		    this.tempKey = '';
     	  this.finalString = '';
-        this.attemptCounter = 0;
+        this.currentPager = 0;
+        this.submitButton = '';
 
 
       	if (performance.navigation.type == 1) { //IF PAGE RELOAD THEN WILL REMOVE KEY FROM LOCALSTORAGE DURING EXAM;
       		window.localStorage.removeItem('examQuestion');
-          window.localStorage.removeItem('attemptCounter');
+          window.localStorage.removeItem('pager');
   	     }
-       
+
+         this.onUnload = this.onUnload.bind(this);
+                 
       }
 
-       countTime(minutes) {
+
+     onUnload(event) { // the method that will be used for both add and remove event
+        console.log("hellooww")
+        event.returnValue = "Changes you made may not be saved";
+    }
+
+    componentDidMount() {
+       window.addEventListener("beforeunload", this.onUnload)
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("beforeunload", this.onUnload)
+    }
+
+
+
+       countTime(minutes) { // calculate time counter 
         var self = this;
           var seconds = 60;
           var mins = minutes
@@ -38,10 +57,13 @@ class Exam extends Component{
               counter.innerHTML =
               current_minutes.toString() + ":" + (seconds < 10 ? "0" : "") + String(seconds);
               if( seconds > 0 ) {
+                 setTimeout(function(){
                   setTimeout(tick, 1000);
+                  },1000);
               } else {
 
                   if(mins > 1){
+
                     self.countTime(mins - 1); 
 
                   }else{  
@@ -53,9 +75,8 @@ class Exam extends Component{
           }
           tick();
 
-
-
       }
+
 
 
       addOrReplace( argh , obj ) {  //FUNCTION FOR MANAGE ARRAY AND OBJECT
@@ -69,15 +90,21 @@ class Exam extends Component{
   		}
 
 
-  
-      handleClick(event) { // CUSTOM ACTION FOR GET CURRENT PAGE SYATE 
-        this.setState({
-          currentPage: Number(event.target.id),
 
-        });
+       getIndexByProperty(data, key, value) { // get index of array
+          for (var i = 0; i < data.length; i++) {
+              if (data[i][key] == value) {
+                  return i;
+              }
+          }
+          return -1;
       }
 
-      prepareOptionResult(object,event){
+
+   
+     
+
+      prepareOptionResult(object,event){ // option selection logic
 
        var answer_1,answer_2,answer_3,answer_4;
        console.log(this.tempKey);
@@ -100,13 +127,7 @@ class Exam extends Component{
                answer_3 = false;
                answer_4 = false;
 
-               if(window.localStorage.getItem('attemptCounter') == null){
-                  window.localStorage.setItem('attemptCounter',1);
-                }else{
-                   var   existingCounter = parseInt(JSON.parse(window.localStorage.getItem('attemptCounter')));
-                    existingCounter = existingCounter +  1;
-                    window.localStorage.setItem('attemptCounter',JSON.stringify(existingCounter)); 
-                }
+              
            
          } 
 
@@ -184,11 +205,12 @@ class Exam extends Component{
               
                
             console.log("pass")
-              if(window.localStorage.getItem('examQuestion') == null){
+              if(window.localStorage.getItem('examQuestion') == null){ 
 
                   let answerObject = {
                     _id :  object._id,
                     marks : 1,   
+                    option : this.result
                  };  
 
                 window.localStorage.setItem('examQuestion',JSON.stringify(Array(answerObject)));
@@ -200,21 +222,64 @@ class Exam extends Component{
 
                      let answerObject = {
                       _id :  object._id,
-                      marks : 1,   
+                      marks : 1,     
+                      option : this.result 
                     };  
 
-             
+                  
+                    var Index = this.getIndexByProperty(existingObject, "_id" , object._id);
+                    if (Index > -1) {
+                        existingObject[Index] = answerObject;
+                    } else {
+                        existingObject.push(answerObject);
+                    }
 
-                existingObject.push(answerObject);
+                 // existingObject.push(answerObject);
                 window.localStorage.setItem('examQuestion',JSON.stringify(existingObject)); 
                
 
               }  
 
               
-          }else{
+          }else{ // else condition for if wrong answer
             console.log("Faild");
-          }
+
+               if(window.localStorage.getItem('examQuestion') == null){
+
+                  let answerObject = {
+                    _id :  object._id,
+                    marks : 0,   
+                    option : this.result
+                 };  
+
+                window.localStorage.setItem('examQuestion',JSON.stringify(Array(answerObject)));
+               
+              }else{
+
+                var existingObject =   JSON.parse(window.localStorage.getItem('examQuestion')) || [];
+                
+
+                     let answerObject = {
+                      _id :  object._id,
+                      marks : 0,   
+                      option : this.result
+                    };  
+
+                   var Index = this.getIndexByProperty(existingObject, "_id" , object._id);
+                    if (Index > -1) {
+                        existingObject[Index] = answerObject;
+                    } else {
+                        existingObject.push(answerObject);
+                    }
+                      
+
+              //  existingObject.push(answerObject);
+                window.localStorage.setItem('examQuestion',JSON.stringify(existingObject)); 
+               
+
+              } 
+
+          } // end of else
 
         }
 
@@ -242,13 +307,32 @@ class Exam extends Component{
 
       submitFinalTest(event){
 
-          if(window.localStorage.getItem('attemptCounter') == null  || parseInt(window.localStorage.getItem('attemptCounter'))  <= 29 ){
-            alert("Sorry!!,Now You can't Submit this Test,Please Attampted First all Questions...!!");
+          if(window.localStorage.getItem('examQuestion') == null  || JSON.parse(window.localStorage.getItem('examQuestion')).length  <= 29 ){
+            alert("Sorry!!,Now You can't Submit this Test,Please Attampted all Questions before submitting... !!");
             return false;
+        
           }
 
-        var selectedAnswer = JSON.parse(window.localStorage.getItem('examQuestion'));
 
+
+          if(window.localStorage.getItem('examQuestion') != null ){
+                  
+                  var resultValue =  JSON.parse(window.localStorage.getItem('examQuestion'));
+                  var counter = 0 ;
+
+                  for (var i = 0; i < resultValue.length; i++) {
+                          if(resultValue[i].option[0] == true || resultValue[i].option[1] == true || resultValue[i].option[2] == true || resultValue[i].option[3] == true ){
+                            counter++;
+                          }
+                  }
+
+             if(counter <= 29){
+                 alert("Sorry!!,You Attampted Only "+ counter + "Question") ;
+                
+                return false;
+             }     
+
+          }
 
         var result = confirm("Do You want to submit this Test ??");
         if(result){
@@ -262,30 +346,78 @@ class Exam extends Component{
 
         if(result){
           browserHistory.push('/test');
+           window.localStorage.removeItem('pager');
         }
         
       }
 
+       handleClick(event) { // CUSTOM ACTION FOR GET CURRENT PAGE SYATE 
 
-      render() {
+        this.setState({
+          currentPage: Number(event.target.id),
 
+        });
+
+        if(window.localStorage.getItem('pager') != null){ // validate pager number for question 
+            if(event.target.id == 2)
+            {
+              window.localStorage.setItem('pager',11)
+            }else if(event.target.id == 3){
+              window.localStorage.setItem('pager',21)
+            }else{
+              window.localStorage.setItem('pager',1);
+
+            }
+
+        }
+
+           if(event.target.id == 3){ // for visibility of submit at last
+
+             this.submitButton = <div className="submit_test">
+                              <button id="submit_test" className="btn btn-success "   onClick={this.submitFinalTest.bind(this)}
+                              >Sumit Test</button>&nbsp;&nbsp;&nbsp;
+                               <button id="cancel_test" className="btn btn-danger "   onClick={this.cancelFinalTest.bind(this)}
+                              >Cancel Test</button>
+                              </div>;
+            }else{
+              this.submitButton = "";
+            }
+
+
+      }
+
+
+
+
+      render() {         // render html
+       
       	var renderPageNumbers = 0;
       	var renderTodos = "";
 
       	if(this.props.questionExam != null){
-            this.countTime(60);
-          	this.state = {
-  	        todos: this.props.questionExam,
-  	        currentPage: 1,
-  	        todosPerPage: 10,
-	      	 }
+            this.countTime(30);
+
+
+            if(window.localStorage.getItem('pager') == null){
+
+                	this.state = {
+        	        todos: this.props.questionExam,
+        	        currentPage: 1,
+        	        todosPerPage: 10,
+      	      	 }  
+
+                 window.localStorage.setItem('pager',1);
+
+             }
+
 
 	        const { todos, currentPage, todosPerPage  } = this.state;
 	        const indexOfLastTodo = currentPage * todosPerPage;
 	        const indexOfFirstTodo = indexOfLastTodo - todosPerPage;
 	        const currentTodos = todos.slice(indexOfFirstTodo, indexOfLastTodo);
 	        const pageNumbers = [];
-
+      
+      //  console.log("Curerent"+JSON.stringify(currentTodos)); 
         if(todos.length <= 29){
         	alert("Question are Preparing by Admin!! , Max 30 Questions should be Their , <<As Requirement not Matched>>!! Now not Permitted for this Exam..");
         	 browserHistory.push('/test');
@@ -293,25 +425,84 @@ class Exam extends Component{
         }
         	
          renderTodos = currentTodos.map((value, index) => {
+
+                 //for state prevent of checkbox
+
+                  if(window.localStorage.getItem('examQuestion') != null){
+
+                    var checkedBox = JSON.parse(window.localStorage.getItem('examQuestion'));
+
+                      for (var i = 0; i < checkedBox.length; i++) {
+                     
+                       if(value._id  == checkedBox[i]._id){
+                  
+
+                              if(checkedBox[i].option[0] == true){
+                                 var id_1 = checkedBox[i]._id+'-1';
+                                 setTimeout(function(){
+                              
+                                 document.getElementById(id_1).setAttribute('checked',true);
+                                },200);
+                              }
+                              if(checkedBox[i].option[1] == true){
+                                var id_2 = checkedBox[i]._id+'-2';
+                                  setTimeout(function(){
+                                
+                                 document.getElementById(id_2).setAttribute('checked',true);
+                                },200);
+                              }
+                              if(checkedBox[i].option[2] == true){
+                                var id_3 = checkedBox[i]._id+'-3';
+                                 setTimeout(function(){
+                                 
+                                 document.getElementById(id_3).setAttribute('checked',true);
+                                },200);
+                              }
+                              if(checkedBox[i].option[3] == true){
+                                var id_4 = checkedBox[i]._id+'-4';
+                                 setTimeout(function(){
+                                     
+                                 document.getElementById(id_4).setAttribute('checked',true);
+                                },200);
+                              }
+
+                            
+                       
+
+                       }
+
+                      
+                    
+                      }
+
+
+                  }
+
+
+
+
+          this.currentPager = parseInt(window.localStorage.getItem('pager'));
+
           return <li key={index}>
           			 <div className="row">
           			 <div className="col-sm-9">
-          			 <strong className="quest">{value.question}</strong>
+          			 <strong className="quest">&nbsp;{index + this.currentPager}-&nbsp;&nbsp;{value.question}</strong>
+                 <br/>
           			 </div>
           			 <div className="col-sm-2">
           				<strong className="quest marks"> -Marks 1</strong>
           			 </div>
-          			   <div className="col-sm-12"> 
-			      	   <label> <input type="checkbox" value={1}  onChange={this.prepareOptionResult.bind(this,value)} /> {value.option_one}</label>
+          			 <div className="col-sm-12"> 
+			      	   <label> <input type="checkbox" key={index + this.currentPager+'-1'}  id={value._id+'-1'} value={1}  onChange={this.prepareOptionResult.bind(this,value)} /> {value.option_one}</label>
 			      	   </div>
 			      	   <div className="col-sm-12"> 
-			      	   <label> <input type="checkbox" value={2}  onChange={this.prepareOptionResult.bind(this,value)} />  {value.option_two}</label>
+			      	   <label> <input type="checkbox" key={index + this.currentPager+'-2'} id={value._id+'-2'}  value={2}  onChange={this.prepareOptionResult.bind(this,value)} />  {value.option_two}</label>
 			      	   </div>
 			      	   <div className="col-sm-12"> 
-			      	   <label> <input type="checkbox" value={3}  onChange={this.prepareOptionResult.bind(this,value)}  />  {value.option_three}</label>
+			      	   <label> <input type="checkbox" key={index + this.currentPager+'-3'} id={value._id+'-3'} value={3}  onChange={this.prepareOptionResult.bind(this,value)}  />  {value.option_three}</label>
 			      	   </div>
 			      	   <div className="col-sm-12"> 
-			      	   <label> <input type="checkbox" value={4}  onChange={this.prepareOptionResult.bind(this,value)} />  {value.option_four}</label>
+			      	   <label> <input type="checkbox" key={index + this.currentPager+'-4'} id={value._id+'-4'} value={4}  onChange={this.prepareOptionResult.bind(this,value)} />  {value.option_four}</label>
 			      	   </div>
 				         </div>
           	     </li>;
@@ -319,7 +510,7 @@ class Exam extends Component{
 
 
           var submitQuestion = null; 
-          todos.length = 2;
+
 		       for (let i = 1; i <= Math.ceil(todos.length / todosPerPage); i++) {
 		          pageNumbers.push(i);
 		        }
@@ -338,24 +529,27 @@ class Exam extends Component{
 
               return (
                    <div className="inner_content_w3_agile_info two_in">
+                   <br/>
+                    <strong>Note : All Question Should be mandatory to Attampted, 1 Marks for Each Question..</strong>
             			 <br/>
+                   <br/>
             			 <div className="blank_w3ls_agile">
             			 <div className="">
+
       		         <br/>
+                  
+
       			       <h2 className="w3_inner_tittle">Question Listing</h2>
                    <div  className="timer" >Time : &nbsp;&nbsp;<strong id="timer"> : 00:00:00</strong></div>
-      	           <ol>
+      	           <ul>
       	           {renderTodos}
-      	            </ol>
+      	            </ul>
+                    <br/>
                     <ul id="page-numbers">
       	              {renderPageNumbers}
       	           </ul>
-                    <div className="submit_test">
-                    <button id="submit_test" className="btn btn-success "   onClick={this.submitFinalTest.bind(this)}
-                    >Sumit Test</button>&nbsp;&nbsp;&nbsp;
-                    <button id="cancel_test" className="btn btn-danger "   onClick={this.cancelFinalTest.bind(this)}
-                    >Cancel Test</button>
-                      </div>
+
+                    {this.submitButton}
             	  		</div>
             			</div>
             			</div>

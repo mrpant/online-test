@@ -11,7 +11,7 @@ class Test extends Component{
 			constructor(props){
 				super(props);
 			  	window.localStorage.removeItem('examQuestion');
-         	    window.localStorage.removeItem('attemptCounter');
+         	    window.localStorage.removeItem('pager');
 			}
 
 		

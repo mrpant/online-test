@@ -19,9 +19,9 @@ font-family: 'Open Sans', sans-serif;
     color:red;
 }
 .timer{
-    position: absolute;
-    top: 125px;
-    right: 296px;
+   position: absolute;
+    top: 155px;
+    right: 52px;
     color: red;
 }
 .test_start{
@@ -29,6 +29,14 @@ font-family: 'Open Sans', sans-serif;
     height: 57px;
     padding: 16px;
 }
+
+.greenClass{
+    color:green;
+}
+.redClass{
+    color:red;
+}
+
 .error_page{
     background: black!important;
 }

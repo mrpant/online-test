@@ -19,7 +19,8 @@ import reducers from './reducers';
 import { AUTH_USER } from './actions/types';
 import { SET_ADMIN_PRIVILEGES } from './actions/types';
 import jwt_decode from 'jwt-decode';
-
+import RequireAuth from './container/auth/require_auth';
+import RequireAdmin from './container/auth/require_admin';
 
 
 //create  middileware for storing all reducers data into store
@@ -47,16 +48,15 @@ ReactDOM.render(
   <Provider store={store}>
     <Router history={browserHistory}>
       <Route path="/" component={App}>
-       <IndexRoute component={ userRole == "admin" ? Admindashboard : (userRole == "user") ? Test : Login } />
+       <IndexRoute component={ userRole == "admin" ? Admindashboard : (userRole == "user") ? RequireAuth(Test) : Login } />
         <Route path="login" component={Login} />
         <Route path="register" component={Register} />
-        <Route path="userdashboard" component={Userdashboard} />
-        <Route path="admindashboard" component={Admindashboard} />
-        <Route path="addquestion" component={Addquestion} />
-        <Route path="viewquestion" component={Viewquestion} />
-        <Route path="exam" component={Exam} />
+        <Route path="admindashboard" component={RequireAdmin(Admindashboard)} />
+        <Route path="addquestion" component={RequireAdmin(Addquestion)} />
+        <Route path="viewquestion" component={RequireAdmin(Viewquestion)} />
+        <Route path="exam" component={RequireAuth(Exam)} />
         <Route path="result" component={Result} />
-         <Route path="test" component={Test} />
+         <Route path="test" component={RequireAuth(Test)} />
         <Route path="*" component={NotFound} />
        </Route>
     </Router>

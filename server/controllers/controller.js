@@ -38,7 +38,7 @@ exports.userList = function(req, res, next) { // REQ FOR GET USER LIST
 exports.signin = function(req, res, next) { // REQ FOR GET LOGIN DETAILS
   // User has been authenticated, send back token
   const username = req.body.username;
-  User.findOne({ username: username , status : 1 }, function(err, existingUser) {
+  User.findOne({ username: username  }, function(err, existingUser) {
        if (err) { 
           return next(err);
         }
@@ -149,7 +149,7 @@ exports.questionList = function(req, res, next) { // REQ FOR GET QUESTION LISTIN
 
 exports.examList = function(req, res, next) { // GET EXAMS LISTING
   
- Question.findRandom({}, {}, {limit: 10}, function(err, question) {
+ Question.findRandom({}, {}, {limit: 30}, function(err, question) {
     if (err) { 
           return next(err);
        }
