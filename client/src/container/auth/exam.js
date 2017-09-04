@@ -5,6 +5,7 @@ import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 import * as actions from '../../actions';
 import { browserHistory } from 'react-router';
 import ReactDOM from 'react-dom';
+import $ from 'jquery';
 
 class Exam extends Component{
 
@@ -19,6 +20,10 @@ class Exam extends Component{
     	  this.finalString = '';
         this.currentPager = 0;
         this.submitButton = '';
+        this.optionsView = '';
+        this.isReviewed = false;
+      
+        
 
 
       	if (performance.navigation.type == 1) { //IF PAGE RELOAD THEN WILL REMOVE KEY FROM LOCALSTORAGE DURING EXAM;
@@ -37,11 +42,16 @@ class Exam extends Component{
     }
 
     componentDidMount() {
-       window.addEventListener("beforeunload", this.onUnload)
+        // highlighted color for slelected paggination
+        setTimeout(function(){
+        $('li#1').attr('style','background:#ccc'); // default color
+        },800);
+
+       window.addEventListener("beforeunload", this.onUnload);
     }
 
     componentWillUnmount() {
-        window.removeEventListener("beforeunload", this.onUnload)
+        window.removeEventListener("beforeunload", this.onUnload);
     }
 
 
@@ -101,14 +111,54 @@ class Exam extends Component{
       }
 
 
-   
-     
+      prepareOptionReview(object,event){
 
+      
+
+           if(event.target.value == 5){
+            
+             if(window.localStorage.getItem('examQuestion') == null){
+                          alert("Please Select Answer First");
+                          event.target.checked = false;
+                          return false;
+             }else{
+
+                  var existingObject =   JSON.parse(window.localStorage.getItem('examQuestion')) || [];
+                
+
+
+                  
+                    var Index = this.getIndexByProperty(existingObject, "_id" , object._id);
+                    if (Index > -1) {
+                      
+                        existingObject[Index].isReview = event.target.checked;
+                        window.localStorage.setItem('examQuestion',JSON.stringify(existingObject));
+
+                      console.log(existingObject[Index].isReview);
+                    }else{
+                          alert("Please Select Answer First");
+                          event.target.checked = false;
+                          return false;
+                    } 
+
+
+             }
+
+
+           }
+
+
+      }
+
+
+    
       prepareOptionResult(object,event){ // option selection logic
 
        var answer_1,answer_2,answer_3,answer_4;
        console.log(this.tempKey);
        console.log(object._id);
+
+       
 
        if(this.tempKey !== object._id){
            this.tempKey = "";
@@ -179,6 +229,14 @@ class Exam extends Component{
                     }
               }   
 
+
+                 if(event.target.value == 5){ // validate for review
+
+                    this.isReviewed = true;
+
+                 }
+
+
                if(this.result[0] == undefined){ // validate if undefined
                  this.result[0] = false;
                 }
@@ -210,7 +268,8 @@ class Exam extends Component{
                   let answerObject = {
                     _id :  object._id,
                     marks : 1,   
-                    option : this.result
+                    option : this.result,
+                    isReview :  false
                  };  
 
                 window.localStorage.setItem('examQuestion',JSON.stringify(Array(answerObject)));
@@ -223,7 +282,8 @@ class Exam extends Component{
                      let answerObject = {
                       _id :  object._id,
                       marks : 1,     
-                      option : this.result 
+                      option : this.result,
+                    isReview :  false 
                     };  
 
                   
@@ -249,7 +309,8 @@ class Exam extends Component{
                   let answerObject = {
                     _id :  object._id,
                     marks : 0,   
-                    option : this.result
+                    option : this.result,
+                    isReview :  false
                  };  
 
                 window.localStorage.setItem('examQuestion',JSON.stringify(Array(answerObject)));
@@ -262,7 +323,8 @@ class Exam extends Component{
                      let answerObject = {
                       _id :  object._id,
                       marks : 0,   
-                      option : this.result
+                      option : this.result,
+                    isReview :  false
                     };  
 
                    var Index = this.getIndexByProperty(existingObject, "_id" , object._id);
@@ -327,17 +389,19 @@ class Exam extends Component{
                   }
 
              if(counter <= 29){
-                 alert("Sorry!!,You Attampted Only "+ counter + "Question") ;
+                 alert("Sorry!!,You Attampted Only "+ counter + " Question") ;
                 
                 return false;
              }     
 
           }
 
-        var result = confirm("Do You want to submit this Test ??");
+        var result = confirm("Do You want to submit this Test for Review ??");
         if(result){
-            browserHistory.push('/result');
-          
+            browserHistory.push('/review');
+            
+        }else{
+          browserHistory.push('/result');
         }
       }
 
@@ -357,6 +421,22 @@ class Exam extends Component{
           currentPage: Number(event.target.id),
 
         });
+
+         if(event.target.id == 1){ // highlighted color for paggination
+          event.currentTarget.style.backgroundColor = '#ccc';
+          $('#2').attr('style','background:blue');
+          $('#3').attr('style','background:blue');
+         }else if(event.target.id == 2){
+          event.currentTarget.style.backgroundColor = '#ccc';
+           $('#1').attr('style','background:blue');
+           $('#3').attr('style','background:blue');
+         }else{
+          event.currentTarget.style.backgroundColor = '#ccc'; 
+           $('#2').attr('style','background:blue');
+           $('#1').attr('style','background:blue');
+         }
+
+      
 
         if(window.localStorage.getItem('pager') != null){ // validate pager number for question 
             if(event.target.id == 2)
@@ -394,6 +474,8 @@ class Exam extends Component{
       	var renderPageNumbers = 0;
       	var renderTodos = "";
 
+
+
       	if(this.props.questionExam != null){
             this.countTime(30);
 
@@ -425,6 +507,8 @@ class Exam extends Component{
         }
         	
          renderTodos = currentTodos.map((value, index) => {
+
+
 
                  //for state prevent of checkbox
 
@@ -466,6 +550,15 @@ class Exam extends Component{
                                 },200);
                               }
 
+                              if(checkedBox[i].isReview == true){ // for review
+                                  var id_5 = checkedBox[i]._id+'-5';
+                                 setTimeout(function(){
+                                     
+                                 document.getElementById(id_5).setAttribute('checked',true);
+                                },200);
+
+                              }
+
                             
                        
 
@@ -474,6 +567,64 @@ class Exam extends Component{
                       
                     
                       }
+
+
+                  } // end checkbox prevent state
+
+
+
+
+                  //validate checkbox or radio depand on condition
+
+                  var viewCounter = 0;
+                  if(value.option_one_isAnswer == true){
+                      viewCounter++;
+                  }
+                  if(value.option_two_isAnswer == true){
+                     viewCounter++;
+                  }
+                  if(value.option_three_isAnswer == true){
+                     viewCounter++;
+                  }
+                  if(value.option_four_isAnswer == true){
+                     viewCounter++;
+                  }
+
+                 
+
+             if(viewCounter  > 1  ){ // validate condition for checkbox or radio
+
+                this.optionsView = <div className="row">
+                 <div className="col-sm-12"> 
+                 <label> <input type="checkbox" key={index + this.currentPager+'-1'}  id={value._id+'-1'} value={1}  onChange={this.prepareOptionResult.bind(this,value)} /> {value.option_one}</label>
+                 </div>
+                 <div className="col-sm-12"> 
+                 <label> <input type="checkbox" key={index + this.currentPager+'-2'} id={value._id+'-2'}  value={2}  onChange={this.prepareOptionResult.bind(this,value)} />  {value.option_two}</label>
+                 </div>
+                 <div className="col-sm-12"> 
+                 <label> <input type="checkbox" key={index + this.currentPager+'-3'} id={value._id+'-3'} value={3}  onChange={this.prepareOptionResult.bind(this,value)}  />  {value.option_three}</label>
+                 </div>
+                 <div className="col-sm-12"> 
+                 <label> <input type="checkbox" key={index + this.currentPager+'-4'} id={value._id+'-4'} value={4}  onChange={this.prepareOptionResult.bind(this,value)} />  {value.option_four}</label>
+                 </div>
+                 </div>;
+
+            }else{
+
+               this.optionsView  = <div className="row" >
+                 <div className="col-sm-12"> 
+                 <label> <input type="radio" name={'radioBox'+index} key={index + this.currentPager+'-1'}  id={value._id+'-1'} value={1}  onChange={this.prepareOptionResult.bind(this,value)} /> {value.option_one}</label>
+                 </div>
+                 <div className="col-sm-12"> 
+                 <label> <input type="radio" name={'radioBox'+index}  key={index + this.currentPager+'-2'} id={value._id+'-2'}  value={2}  onChange={this.prepareOptionResult.bind(this,value)} />  {value.option_two}</label>
+                 </div>
+                 <div className="col-sm-12"> 
+                 <label> <input type="radio" name={'radioBox'+index} key={index + this.currentPager+'-3'} id={value._id+'-3'} value={3}  onChange={this.prepareOptionResult.bind(this,value)}  />  {value.option_three}</label>
+                 </div>
+                 <div className="col-sm-12"> 
+                 <label> <input type="radio" name={'radioBox'+index}  key={index + this.currentPager+'-4'} id={value._id+'-4'} value={4}  onChange={this.prepareOptionResult.bind(this,value)} />  {value.option_four}</label>
+                 </div>
+                 </div>;
 
 
                   }
@@ -485,25 +636,19 @@ class Exam extends Component{
 
           return <li key={index}>
           			 <div className="row">
-          			 <div className="col-sm-9">
+          			 <div className="col-sm-8">
           			 <strong className="quest">&nbsp;{index + this.currentPager}-&nbsp;&nbsp;{value.question}</strong>
                  <br/>
           			 </div>
+                  <div className="col-sm-2">
+                  <strong className="quest review">isReview&nbsp;&nbsp;<input type="checkbox" key={index + this.currentPager+'-5'} id={value._id+'-5'}  value={5} onChange={this.prepareOptionReview.bind(this,value)}/></strong>
+                 </div>
+
           			 <div className="col-sm-2">
           				<strong className="quest marks"> -Marks 1</strong>
           			 </div>
-          			 <div className="col-sm-12"> 
-			      	   <label> <input type="checkbox" key={index + this.currentPager+'-1'}  id={value._id+'-1'} value={1}  onChange={this.prepareOptionResult.bind(this,value)} /> {value.option_one}</label>
-			      	   </div>
-			      	   <div className="col-sm-12"> 
-			      	   <label> <input type="checkbox" key={index + this.currentPager+'-2'} id={value._id+'-2'}  value={2}  onChange={this.prepareOptionResult.bind(this,value)} />  {value.option_two}</label>
-			      	   </div>
-			      	   <div className="col-sm-12"> 
-			      	   <label> <input type="checkbox" key={index + this.currentPager+'-3'} id={value._id+'-3'} value={3}  onChange={this.prepareOptionResult.bind(this,value)}  />  {value.option_three}</label>
-			      	   </div>
-			      	   <div className="col-sm-12"> 
-			      	   <label> <input type="checkbox" key={index + this.currentPager+'-4'} id={value._id+'-4'} value={4}  onChange={this.prepareOptionResult.bind(this,value)} />  {value.option_four}</label>
-			      	   </div>
+                 
+          			 {this.optionsView}
 				         </div>
           	     </li>;
         });
@@ -511,14 +656,17 @@ class Exam extends Component{
 
           var submitQuestion = null; 
 
+          var defaultActive = {background : "#ccc"} ;
+          var otherActive = {background : "blue"};
+
 		       for (let i = 1; i <= Math.ceil(todos.length / todosPerPage); i++) {
 		          pageNumbers.push(i);
 		        }
 		         renderPageNumbers = pageNumbers.map(number => {
   		          return (
-  		            <li
+  		            <li style={number == 1 ? defaultActive : otherActive}
   		              key={number}
-  		              id={number}
+  		              id={number }
   		              onClick={this.handleClick}>
   		              {number}
   		            </li>
@@ -527,7 +675,12 @@ class Exam extends Component{
 
    	        } // end of if condition
 
+
+
+
               return (
+
+                   
                    <div className="inner_content_w3_agile_info two_in">
                    <br/>
                     <strong>Note : All Question Should be mandatory to Attampted, 1 Marks for Each Question..</strong>
@@ -545,7 +698,7 @@ class Exam extends Component{
       	           {renderTodos}
       	            </ul>
                     <br/>
-                    <ul id="page-numbers">
+                    <ul id="page-numbers" >
       	              {renderPageNumbers}
       	           </ul>
 

@@ -15,8 +15,20 @@ h1,h2,h3,h4,h5,h6{
 font-family: 'Open Sans', sans-serif;
 }	
 
+.quest1{
+    position: absolute;
+    top: 8px;
+}
 .marks{
     color:red;
+}
+
+.option_align{
+    margin-left: 80px;
+}
+
+.review{
+    color:black;
 }
 .timer{
    position: absolute;

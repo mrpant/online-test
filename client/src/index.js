@@ -15,6 +15,7 @@ import Viewquestion from './container/question/viewquestion';
 import Admindashboard from './container/auth/admindashboard';
 import Register from './container/auth/register';
 import Exam from './container/auth/exam';
+import Review from './container/auth/review';
 import reducers from './reducers';
 import { AUTH_USER } from './actions/types';
 import { SET_ADMIN_PRIVILEGES } from './actions/types';
@@ -55,6 +56,7 @@ ReactDOM.render(
         <Route path="addquestion" component={RequireAdmin(Addquestion)} />
         <Route path="viewquestion" component={RequireAdmin(Viewquestion)} />
         <Route path="exam" component={RequireAuth(Exam)} />
+        <Route path="review" component={RequireAuth(Review)} />
         <Route path="result" component={Result} />
          <Route path="test" component={RequireAuth(Test)} />
         <Route path="*" component={NotFound} />

@@ -12,6 +12,10 @@ class Test extends Component{
 				super(props);
 			  	window.localStorage.removeItem('examQuestion');
          	    window.localStorage.removeItem('pager');
+         	    window.localStorage.removeItem('isReview');
+         	     window.localStorage.removeItem('QuestionData');
+         	    
+         	   
 			}
 
 		
